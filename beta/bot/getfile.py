@@ -40,9 +40,9 @@ async def bot_get_file(event):
             buttons = [
                 Button.inline('放入config', data=CONFIG_DIR),
                 Button.inline('放入user', data=USER_DIR),
-                Button.inline('可达鸭scripts', data=KDY_DIR),
-                Button.inline('仅放入scripts', data=SCRIPTS_DIR),
-                Button.inline('放入scripts并运行', data='node1'),
+                Button.inline('KDY_scripts', data=KDY_DIR),
+                Button.inline('放入scripts', data=SCRIPTS_DIR),
+                Button.inline('scripts下运行', data='node1'),
                 Button.inline('取消', data='cancel')
             ]
         async with jdbot.conversation(SENDER, timeout=180) as conversation:

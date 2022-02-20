@@ -10,7 +10,7 @@ from .utils import execute
 @jdbot.on(events.NewMessage(chats=chat_id, from_users=chat_id, pattern='/cmd'))
 async def my_cmd(event):
     """接收/cmd命令后执行程序"""
-    logger.info(f'即将执行{event.raw_text}命令')
+    logger.info(f'即将执行`{event.raw_text}`命令')
     msg_text = event.raw_text.split(' ')
     try:
         if isinstance(msg_text, list):
@@ -18,7 +18,7 @@ async def my_cmd(event):
         else:
             text = None
         if START_CMD and text:
-            info = f'执行 {text} 命令'
+            info = f'执行 `{text}` 命令'
             await execute(chat_id, info, text)
             logger.info(text)
         elif START_CMD:
