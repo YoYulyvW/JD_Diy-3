@@ -5,9 +5,10 @@ import traceback
 from telethon import Button, events
 
 from .utils import add_cron, backup_file, DIY_DIR, execute, press_event, row, split_list, TASK_CMD, V4
-from .. import chat_id, CONFIG_DIR, jdbot, logger, SCRIPTS_DIR
+from .. import chat_id, CONFIG_DIR, jdbot, logger, SCRIPTS_DIR, BOT_DIR
 
-
+USER_DIR = f'{BOT_DIR}/user'
+KDY_DIR = f'{SCRIPTS_DIR}/parse/jd'
 @jdbot.on(events.NewMessage(from_users=chat_id))
 async def bot_get_file(event):
     """
@@ -17,13 +18,13 @@ async def bot_get_file(event):
         if not event.message.file:
             return
         filename = event.message.file.name
-        if not (
+        """if not (
                 filename.endswith(".py")
                 or filename.endswith(".pyc")
                 or filename.endswith(".js")
                 or filename.endswith(".sh")
         ):
-            return
+            return"""
         SENDER = event.sender_id
         cmdtext = False
         if V4:
@@ -38,6 +39,8 @@ async def bot_get_file(event):
         else:
             buttons = [
                 Button.inline('放入config', data=CONFIG_DIR),
+                Button.inline('放入user', data=USER_DIR),
+                Button.inline('可达鸭scripts', data=KDY_DIR),
                 Button.inline('仅放入scripts', data=SCRIPTS_DIR),
                 Button.inline('放入scripts并运行', data='node1'),
                 Button.inline('取消', data='cancel')
@@ -96,7 +99,7 @@ async def bot_get_file(event):
                         resp = "None"
                     await add_cron(jdbot, conversation, resp, filename, msg, SENDER, buttons, res1)
                 else:
-                    await jdbot.edit_message(msg, f'{filename}已保存到{res1}文件夹')
+                    await jdbot.edit_message(msg, f'`{filename}`已保存到`{res1}`文件夹')
             conversation.cancel()
         if cmdtext:
             await execute(chat_id, '', cmdtext)
