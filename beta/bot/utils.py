@@ -140,7 +140,7 @@ async def execute(msg, info, exectext):
     执行命令
     """
     try:
-        info += f'\n\n==========📣开始执行📣=========\n'
+        info += f'\n\n📢开始执行 . . .\n'
         if isinstance(msg, int):
             msg = await jdbot.send_message(msg, info)
         else:
