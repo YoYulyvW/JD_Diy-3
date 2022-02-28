@@ -182,6 +182,143 @@ async def execute(msg, info, exectext):
         await jdbot.send_message(chat_id, f"{title}\n\n{name}\n{function}\n错误原因：{str(e)}\n{details}\n{traceback.format_exc()}\n{tip}")
         logger.error(f"错误--->{str(e)}")
 
+async def zd_execute(msg, info, exectext, name, group):
+    """
+    执行命令
+    """
+    try:
+        info += f'\n\n📢开始执行 . . .\n'
+        send = ''
+        if isinstance(msg, int):
+            msg = await jdbot.send_message(msg, info)
+        else:
+            msg = await msg.edit(info)
+        p = await asyncio.create_subprocess_shell(exectext, shell=True, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=os.environ)
+        res_bytes, res_err = await p.communicate()
+        res = res_bytes.decode('utf-8')
+        if len(res) == 0:
+            info += '\n已执行，但返回值为空'
+            await msg.edit(info)
+            return
+        else:
+            try:
+                if re.findall('https://.*activityId.*', res):
+                    rk = re.findall('https://.*activityId.*', res)[0]
+                    send += f'✅ [{name}]({rk}) for:{group}\n\n📢执行完毕 . . .\n'
+                else:
+                    send += f'✅ {name} for:{group}\n\n📢执行完毕 . . .\n'
+                    #rk = ''
+                #send += f'✅ [{name}]({rk}) for:{group}\n\n📢执行完毕 . . .\n'
+                logtime = f'执行时间：' + re.findall(r'脚本执行- 北京时间.UTC.8.：(.*?)=', res, re.S)[0] + '\n'
+                send += logtime
+            except:
+                pass
+            if re.search('系统通知', res, re.S):
+                loginfo = ('\n' + '=' * 34 + '\n').join(re.findall('=+📣系统通知📣=+(.*?)\n🔔', res, re.S))
+                if '组队瓜分京豆' in loginfo:
+                    if '积分' in loginfo:
+                        send += '\n积分车，不显示详情'
+                    else:
+                        """try:
+                            result = re.findall('【京东账号\d+】.*', loginfo)
+                            for i in range(len(result) - 1, -1, -1):
+                                keys = ['您已经加入其它队伍了！', '队伍已经满员', '会员', '入会']
+                                if any(k in result[i] for k in keys):
+                                    result.remove(result[i])
+                            if result:
+                                info = '\n'.join(result).replace("京东账号", '京东账号') + '\n'
+                                # print(info)
+                            else:
+                                info = result = re.findall('【京东账号\d+】.*', loginfo)
+                                # print(info)
+                        except:
+                            print(loginfo)"""
+                        try:
+                            shopname = re.findall('组队瓜分京豆\n(.*)', loginfo)[0]
+                            maxteam = re.findall('组建 (\d+)个', loginfo)
+                            bean = re.findall(' (\d+)京豆', loginfo)
+                            send += f'\n{shopname}\n最多组建:{maxteam[0]}个队伍\n每人:{bean[0]}京豆,队长额外:{bean[1]}京豆\n'
+                            list1 = loginfo.split('创建队伍')
+                            try:
+                                if '活动结束' in loginfo:
+                                    try:
+                                        if re.findall('账号1 【共有\d+人，组满了\d+队】\n活动结束', loginfo):
+                                            num = re.findall('账号1 【共有\d+人，组满了(.*)队】\n活动结束', loginfo)[0]
+                                            if str(num) < '1':
+                                                send += '破车无疑，还没开始就结束了！'
+                                            else:
+                                                send += '旧车新开，没啥好看的！'
+                                        else:
+                                            pass
+                                    except:
+                                        pass
+                                if '【京东账号1】 创建队伍' in loginfo:
+                                    population, team = re.findall('账号1 【共有(.*)人，组满了(.*)队】', loginfo)[0]
+                                    jointeam = re.findall('】 加入队伍', list1[1])
+                                    if len(jointeam) > 0:
+                                        send += f'【账号1】:\n\t  └ 本次有 {len(jointeam)}个工具人加入队伍\n\t  └ 队伍总人数:{population},组满了:{team}个队伍\n'
+                                    else:
+                                        send += f'【账号1】:\n\t  └ 跑了个寂寞‼\n\t  └ 本次有 {len(jointeam)}个工具人加入队伍\n\t  └ 队伍总人数:{population},组满了:{team}个队伍\n'
+                                        #send += f'\t  └ 跑了个寂寞‼'
+                                if '【京东账号2】 创建队伍' in loginfo:
+                                    population, team = re.findall('账号2 【共有(.*)人，组满了(.*)队】', loginfo)[0]
+                                    jointeam = re.findall('】 加入队伍', list1[2])
+                                    if len(jointeam) > 0:
+                                        send += f'【账号2】:\n\t  └ 本次有 {len(jointeam)}个工具人加入队伍\n\t  └ 队伍总人数:{population},组满了:{team}个队伍\n'
+                                    else:
+                                        send += f'【账号2】:\n\t  └ 跑了个寂寞‼\n\t  └ 本次有 {len(jointeam)}个工具人加入队伍\n\t  └ 队伍总人数:{population},组满了:{team}个队伍\n'
+                                        #send += f'\t  └ 跑了个寂寞‼'
+                                if '【京东账号3】 创建队伍' in loginfo:
+                                    population, team = re.findall('账号3 【共有(.*)人，组满了(.*)队】', loginfo)[0]
+                                    jointeam = re.findall('】 加入队伍', list1[3])
+                                    if len(jointeam) > 0:
+                                        send += f'【账号3】:\n\t  └ 本次有 {len(jointeam)}个工具人加入队伍\n\t  └ 队伍总人数:{population},组满了:{team}个队伍\n'
+                                    else:
+                                        send += f'【账号3】:\n\t  └ 跑了个寂寞‼\n\t  └ 本次有 {len(jointeam)}个工具人加入队伍\n\t  └ 队伍总人数:{population},组满了:{team}个队伍\n'
+                                        #send += f'\t  └ 跑了个寂寞‼'
+                                if '【京东账号4】 创建队伍' in loginfo:
+                                    population, team = re.findall('账号4 【共有(.*)人，组满了(.*)队】', loginfo)[0]
+                                    jointeam = re.findall('】 加入队伍', list1[1])
+                                    if len(jointeam) > 0:
+                                        send += f'【账号4】:\n\t  └ 本次有 {len(jointeam)}个工具人加入队伍\n\t  └ 队伍总人数:{population},组满了:{team}个队伍\n'
+                                    else:
+                                        send += f'【账号4】:\n\t  └ 跑了个寂寞‼\n\t  └ 本次有 {len(jointeam)}个工具人加入队伍\n\t  └ 队伍总人数:{population},组满了:{team}个队伍\n'
+                                        #send += f'\t  └ 跑了个寂寞‼'
+                                #send += f'\n\n本次执行{name}, 🕛耗时:' + re.findall('耗时(.*?) 秒', res, re.S)[0] + '秒'
+                            except:
+                                pass
+                        except:
+                            pass
+                elif '加购有礼' in res:
+                    if re.findall(r'【京东账号\d+】 获得', res):
+                        shopname = re.findall(r'关注加购有礼\n(.*)', res)[0]
+                        shopnameinfo = re.findall('(【京东账号\d+】 获得.*[\W\w+]*)(?=🔔关注加购有礼)', res)[0]
+                        send += f'\n{shopname}\n\n{shopnameinfo}'
+                    else:
+                        shopname = re.findall(r'关注加购有礼\n(.*)', res)[0]
+                        send += f'\n{shopname}\n\n啥也没有\n'
+                send += f'\n\n本次执行{name}, 🧭耗时:' + re.findall('耗时(.*?) 秒', res, re.S)[0] + '秒'
+            else:
+                send = res
+            errinfo = '\n**——‼错误代码493，IP可能黑了‼——**\n' if re.search('Response code 493', res) else ''
+            if len(send + errinfo) <= 4000:
+                await msg.edit(send + errinfo)
+            elif len(send + errinfo) > 4000:
+                tmp_log = f'{LOG_DIR}/bot/{exectext.split("/")[-1].split(".js")[0].split(".py")[0].split(".pyc")[0].split(".sh")[0].split(".ts")[0].split(" ")[-1]}-{datetime.datetime.now().strftime("%H-%M-%S.%f")}.log'
+                with open(tmp_log, 'w+', encoding='utf-8') as f:
+                    f.write(res)
+                await msg.delete()
+                info += '\n执行结果较长，请查看日志'
+                await jdbot.send_message(msg.chat_id, info + errinfo, file=tmp_log)
+                os.remove(tmp_log)
+    except Exception as e:
+        title = "【💥错误💥】"
+        name = "文件名：" + os.path.split(__file__)[-1].split(".")[0]
+        function = "函数名：" + e.__traceback__.tb_frame.f_code.co_name
+        details = "错误详情：第 " + str(e.__traceback__.tb_lineno) + " 行"
+        tip = '建议百度/谷歌进行查询'
+        await jdbot.send_message(chat_id, f"{title}\n\n{name}\n{function}\n错误原因：{str(e)}\n{details}\n{traceback.format_exc()}\n{tip}")
+        logger.error(f"错误--->{str(e)}")
 
 def get_ch_names(path, dir):
     """获取文件中文名称，如无则返回文件名"""
